@@ -67,8 +67,7 @@ export function VoiceChatPage({
   isListening, 
   onToggleListening, 
   transcript,
-  isProcessing = false,
-  sources = []
+  isProcessing = false
 }: VoiceChatPageProps) {
   return (
     <div className="flex-1 flex flex-col bg-gray-50 relative overflow-hidden">

@@ -24,7 +24,7 @@ function formatDuration(minutes: number): string {
   }
 }
 
-export function ItineraryFeed({ selectedDay, itinerary }: ItineraryFeedProps) {
+export function ItineraryFeed({ selectedDay: _selectedDay, itinerary }: ItineraryFeedProps) {
   if (!itinerary) {
     return (
       <div className="flex-1 overflow-y-auto pb-32 px-4 flex items-center justify-center">

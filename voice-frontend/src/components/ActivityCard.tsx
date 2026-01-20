@@ -12,7 +12,7 @@ interface ActivityCardProps {
   };
 }
 
-export function ActivityCard({ name, duration, duration_minutes, start_time, end_time }: ActivityCardProps) {
+export function ActivityCard({ name, duration, duration_minutes }: ActivityCardProps) {
   // Format duration - prefer the display format if available, otherwise calculate from minutes
   const displayDuration = duration || (duration_minutes ? formatDurationFromMinutes(duration_minutes) : '');
 

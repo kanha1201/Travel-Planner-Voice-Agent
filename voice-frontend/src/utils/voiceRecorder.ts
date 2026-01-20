@@ -60,7 +60,7 @@ export class VoiceRecorder {
         resolve(audioBlob);
       };
 
-      this.mediaRecorder.onerror = (event) => {
+      this.mediaRecorder.onerror = () => {
         this.cleanup();
         reject(new Error('Recording error occurred'));
       };
