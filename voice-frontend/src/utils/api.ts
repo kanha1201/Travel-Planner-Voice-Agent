@@ -3,7 +3,22 @@
  */
 
 // Use environment variable for backend URL, fallback to /api for local development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// Ensure no trailing slash and proper /api prefix
+let API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// Remove trailing slash if present
+API_BASE_URL = API_BASE_URL.replace(/\/$/, '');
+// If it's a full URL (starts with http), use it as-is; otherwise ensure /api prefix
+if (!API_BASE_URL.startsWith('http')) {
+  // Local development: ensure /api prefix
+  if (!API_BASE_URL.startsWith('/api')) {
+    API_BASE_URL = '/api';
+  }
+} else {
+  // Production: ensure /api is appended if not already present
+  if (!API_BASE_URL.endsWith('/api')) {
+    API_BASE_URL = `${API_BASE_URL}/api`;
+  }
+}
 
 export interface VoiceChatResponse {
   session_id: string;
@@ -29,14 +44,29 @@ export async function sendVoiceMessage(
   formData.append('voice', 'default');
   formData.append('speed', '1.0');
 
+  console.log('Sending request to:', `${API_BASE_URL}/voice/chat`);
+  
   const response = await fetch(`${API_BASE_URL}/voice/chat`, {
     method: 'POST',
     body: formData,
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-    throw new Error(error.detail || `HTTP error! status: ${response.status}`);
+    let errorDetail = `HTTP error! status: ${response.status}`;
+    try {
+      const error = await response.json();
+      errorDetail = error.detail || error.message || errorDetail;
+    } catch (e) {
+      // If response is not JSON, try to get text
+      try {
+        const text = await response.text();
+        errorDetail = text || errorDetail;
+      } catch (e2) {
+        // Use default error message
+      }
+    }
+    console.error('API Error:', errorDetail, 'Status:', response.status);
+    throw new Error(errorDetail);
   }
 
   // Get session ID from headers

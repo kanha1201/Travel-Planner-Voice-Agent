@@ -146,11 +146,12 @@ export default function App() {
 
       } catch (error) {
         console.error('Error processing voice message:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         setTranscript(prev => [
           ...prev,
           { 
             type: 'assistant', 
-            text: 'Sorry, I encountered an error processing your request. Please try again.', 
+            text: `Sorry, I encountered an error: ${errorMessage}. Please check the browser console for details.`, 
             timestamp: new Date() 
           }
         ]);
