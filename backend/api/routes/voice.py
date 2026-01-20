@@ -225,6 +225,58 @@ async def synthesize_speech(
         raise HTTPException(status_code=500, detail=f"Speech synthesis failed: {str(e)}")
 
 
+@router.get("/health")
+async def voice_health_check():
+    """Health check endpoint to verify all services are configured"""
+    health_status = {
+        "status": "healthy",
+        "services": {}
+    }
+    
+    # Check STT
+    try:
+        stt = get_stt_client()
+        health_status["services"]["stt"] = {
+            "available": stt is not None,
+            "provider": STT_PROVIDER
+        }
+    except Exception as e:
+        health_status["services"]["stt"] = {
+            "available": False,
+            "error": str(e)
+        }
+    
+    # Check TTS
+    try:
+        tts = get_tts_client()
+        health_status["services"]["tts"] = {
+            "available": tts is not None,
+            "provider": TTS_PROVIDER
+        }
+    except Exception as e:
+        health_status["services"]["tts"] = {
+            "available": False,
+            "error": str(e)
+        }
+    
+    # Check Orchestrator
+    try:
+        from api.routes.trip import get_orchestrator
+        orchestrator = get_orchestrator()
+        health_status["services"]["orchestrator"] = {
+            "available": orchestrator is not None,
+            "provider": orchestrator.llm_client.provider if orchestrator else None
+        }
+    except Exception as e:
+        health_status["services"]["orchestrator"] = {
+            "available": False,
+            "error": str(e)
+        }
+        health_status["status"] = "degraded"
+    
+    return health_status
+
+
 @router.post("/chat")
 async def voice_chat(
     audio: UploadFile = File(..., description="Audio file with user's voice input"),
@@ -483,10 +535,23 @@ async def voice_chat(
     except HTTPException:
         raise
     except ValueError as e:
+        logger.error(f"ValueError in voice chat: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
         logger.error(f"Voice chat error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Voice chat failed: {str(e)}")
+        logger.error(f"Full traceback:\n{error_traceback}")
+        # Provide more detailed error message for debugging
+        error_detail = str(e)
+        if "api" in error_detail.lower() or "key" in error_detail.lower():
+            error_detail = f"API configuration error: {error_detail}. Please check your API keys in Render environment variables."
+        elif "import" in error_detail.lower() or "module" in error_detail.lower():
+            error_detail = f"Module import error: {error_detail}. Please check that all dependencies are installed."
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Voice chat failed: {error_detail}. Check backend logs for full traceback."
+        )
 
 
 @router.get("/debug/api-key")
