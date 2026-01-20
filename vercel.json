@@ -1,0 +1,14 @@
+{
+  "buildCommand": "cd voice-frontend && npm install && npm run build",
+  "outputDirectory": "voice-frontend/dist",
+  "devCommand": "cd voice-frontend && npm run dev",
+  "installCommand": "cd voice-frontend && npm install",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+

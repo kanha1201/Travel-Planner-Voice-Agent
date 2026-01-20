@@ -2,7 +2,8 @@
  * API client for backend communication
  */
 
-const API_BASE_URL = '/api';
+// Use environment variable for backend URL, fallback to /api for local development
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export interface VoiceChatResponse {
   session_id: string;
