@@ -17,14 +17,19 @@ This guide explains how to deploy the Voice Travel Planner frontend to Vercel.
 3. Import your GitHub repository: `kanha1201/Travel-Planner-Voice-Agent`
 4. Vercel will automatically detect the `vercel.json` configuration
 
-### 2. Configure Build Settings
+### 2. Configure Build Settings (CRITICAL)
 
-The `vercel.json` file is already configured with:
-- **Build Command**: `cd voice-frontend && npm install && npm run build`
-- **Output Directory**: `voice-frontend/dist`
-- **Framework**: Vite
+**IMPORTANT**: Since your frontend is in a subdirectory, you MUST configure the Root Directory:
 
-Vercel should automatically detect these settings. Verify in the project settings.
+1. Go to your Vercel project → **Settings** → **Build & Development Settings**
+2. Set **Root Directory** to: `voice-frontend`
+3. Vercel will automatically detect:
+   - **Framework**: Vite
+   - **Build Command**: `npm run build` (runs from voice-frontend directory)
+   - **Output Directory**: `dist` (relative to voice-frontend)
+   - **Install Command**: `npm install`
+
+**If you don't set the Root Directory, Vercel will try to build from the repo root and fail with a 404!**
 
 ### 3. Set Environment Variables
 
