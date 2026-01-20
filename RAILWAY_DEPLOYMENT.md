@@ -21,12 +21,22 @@ This guide shows you how to deploy both your React frontend and FastAPI backend 
 
 ### Step 2: Deploy Backend Service
 
-Railway will auto-detect Python and create a service. Configure it:
+**CRITICAL: Configure Root Directory FIRST before Railway tries to build!**
 
-1. Click on the service (or create new service if needed)
-2. Go to **Settings** tab
-3. Set **Root Directory** to: `backend`
-4. Go to **Variables** tab and add:
+1. After creating the project, Railway will start building automatically
+2. **STOP the deployment** if it's running (click the service → Settings → Delete/Stop)
+3. Click on the service (or create new service if needed)
+4. Go to **Settings** tab
+5. **IMPORTANT**: Set **Root Directory** to: `backend`
+   - This tells Railway to look in the `backend/` folder for Python files
+   - Without this, Railway looks at repo root and can't detect Python
+6. Go to **Settings** → **Deploy** section
+7. Set **Start Command** to:
+   ```
+   uvicorn main:app --host 0.0.0.0 --port $PORT
+   ```
+   - Railway should auto-detect build from `requirements.txt` and `nixpacks.toml`
+8. Go to **Variables** tab and add:
 
 ```
 CEREBRAS_API_KEY=your_cerebras_key_here
@@ -36,44 +46,42 @@ CORS_ORIGINS=https://your-frontend-url.railway.app
 LOG_LEVEL=INFO
 ```
 
-5. Go to **Settings** → **Deploy** section
-6. Set **Start Command** to:
-   ```
-   uvicorn main:app --host 0.0.0.0 --port $PORT
-   ```
-7. Railway will auto-detect the build command (installs from `requirements.txt`)
-8. Wait for deployment to complete
-9. Copy the generated URL (e.g., `https://your-backend.railway.app`)
+9. Click **"Redeploy"** or wait for automatic redeploy
+10. Wait for deployment to complete
+11. Copy the generated URL (e.g., `https://your-backend.railway.app`)
+
+**If you see "Railpack could not determine how to build the app":**
+- Make sure **Root Directory** is set to `backend` (not empty!)
+- The `backend/` folder contains `requirements.txt` and `main.py`
+- Check that `nixpacks.toml` and `Procfile` exist in `backend/` folder
 
 ### Step 3: Deploy Frontend Service
 
 1. In the same Railway project, click **"+ New"** → **"GitHub Repo"**
 2. Select the same repository: `kanha1201/Travel-Planner-Voice-Agent`
 3. Click **"Deploy Now"**
-4. Go to **Settings** tab
+4. **IMPORTANT**: Go to **Settings** tab immediately
 5. Set **Root Directory** to: `voice-frontend`
-6. Go to **Variables** tab and add:
+   - This tells Railway to look in `voice-frontend/` for Node.js files
+   - Without this, Railway can't find `package.json`
+6. Go to **Settings** → **Deploy** section
+7. Set **Build Command** to:
+   ```
+   npm install && npm run build
+   ```
+8. Set **Start Command** to:
+   ```
+   npm run serve
+   ```
+   (The `serve` script is already added to `package.json`)
+9. Go to **Variables** tab and add:
    ```
    VITE_API_BASE_URL=https://your-backend.railway.app
    ```
    (Replace with your actual backend URL from Step 2)
-7. Go to **Settings** → **Deploy** section
-8. Set **Build Command** to:
-   ```
-   npm install && npm run build
-   ```
-9. Set **Start Command** to:
-   ```
-   npx serve -s dist -l $PORT
-   ```
-   Or use a static file server. You may need to add `serve` to `package.json`:
-   ```json
-   "scripts": {
-     "serve": "serve -s dist -l $PORT"
-   }
-   ```
-10. Wait for deployment to complete
-11. Copy the frontend URL
+10. Railway will automatically redeploy with new settings
+11. Wait for deployment to complete
+12. Copy the frontend URL
 
 ### Step 4: Update CORS in Backend
 
@@ -122,6 +130,13 @@ Then set start command to: `python server.py`
 
 ### Backend Issues
 
+**"Railpack could not determine how to build the app" Error:**
+- ✅ **Solution**: Set **Root Directory** to `backend` in service settings
+- ✅ Make sure `backend/requirements.txt` exists
+- ✅ Make sure `backend/main.py` exists
+- ✅ The `nixpacks.toml` and `Procfile` files help Railway detect Python
+- ❌ Don't leave Root Directory empty - Railway will look at repo root
+
 **Port Error:**
 - Make sure start command uses `$PORT` environment variable
 - Railway provides this automatically
@@ -129,11 +144,17 @@ Then set start command to: `python server.py`
 **Module Not Found:**
 - Check `requirements.txt` includes all dependencies
 - Check Railway build logs
+- Verify Python version (should be 3.12 based on `runtime.txt`)
 
 **ChromaDB Issues:**
 - ChromaDB data is stored locally. For production, consider:
   - Using Railway's persistent volumes
   - Or migrating to cloud vector DB
+
+**Build Fails:**
+- Check that Root Directory is set correctly
+- Verify all files exist in the backend directory
+- Check build logs for specific error messages
 
 ### Frontend Issues
 
